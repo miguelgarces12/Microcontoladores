@@ -1,5 +1,5 @@
 ;Lab_1 Juan Rodriguez/201920171; Miguel Garces/202013995
-;Mapeo de una entrada y una salida AVANZADO
+;Mapeo de una entrada y una salida avanzado
 
 ; Definición de registros y direcciones de memoria para los periféricos
 RCC_AHB4ENR		EQU		0X58024540  		; Habilitamos relojes para los puertos 
