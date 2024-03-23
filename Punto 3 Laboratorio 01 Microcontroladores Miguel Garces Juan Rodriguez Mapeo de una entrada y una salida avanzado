@@ -1,0 +1,100 @@
+;Lab_1 Juan Rodriguez/201920171; Miguel Garces/202013995
+;Mapeo de una entrada y una salida AVANZADO
+
+; Definición de registros y direcciones de memoria para los periféricos
+RCC_AHB4ENR		EQU		0X58024540  		; Habilitamos relojes para los puertos 
+GPIOB_MODER		EQU 	0X58020400 			; Registro de modo del GPIOB
+GPIOB_ODR 		EQU     0X58020414  		; Registro de datos de salida del GPIOB
+GPIOC_MODER		EQU 	0X58020800 			; Registro de modo del GPIOB
+GPIOC_IDR 		EQU     0X58020810 			; Registro de datos de salida del GPIOB
+
+	
+; Definición de la sección de código como solo lectura y alineación de 2 bytes
+			AREA |.Text|, CODE, READONLY, ALIGN = 2
+
+			; Punto de entrada del programa
+			ENTRY
+			EXPORT __main
+
+__main  
+    
+			LDR     R0, = RCC_AHB4ENR   		; Cargar la dirección de RCC_AHB4ENR en R0
+			LDR     R1, [R0]            		; Cargar el contenido de RCC_AHB4ENR en R1
+
+    
+			ORR     R1, #0X0006         		; Habilitar los relojes para GPIOB (bit 1) y GPIOC (bit 2) mediante la operación OR
+			STR     R1, [R0]             		; Almacenar el nuevo valor en RCC_AHB4ENR
+    
+    ; Configurar GPIOB (PB0 y PB14) como salidas
+			LDR     R0, = GPIOB_MODER   
+			MOVW    R1, #0x0000
+			MOVT    R1, #0x1000			
+			STR     R1, [R0]             
+    
+    ; Configurar GPIOC como entrada
+			LDR     R0, = GPIOC_MODER   
+			MOVW    R1, #0x00000000     
+			STR     R1, [R0]            
+    
+			LDR     R10, = GPIOB_ODR    		; Obtener la dirección base del registro ODR de GPIOB
+
+LOOP
+			LDR     R1, =GPIOC_IDR      		; Leer el estado del pin 13 (bit 13) de GPIOC
+			LDR     R2, [R1]            
+    ; Verificar si el botón está presionado mediante el debounce
+			AND     R3, R2, #0x2000      
+			CMP     R3, #0x2000         
+			BEQ     DEBOUNCE            
+    
+			B       LOOP                 		; Si no está presionado, continuar en el bucle
+
+DEBOUNCE
+    ; Esperar un breve período de tiempo para el debounce
+			MOV     R3,#10
+			BL      DELAY_MS 
+    
+    ; Leer nuevamente el estado del pin 13 de GPIOC
+			LDR     R2, [R1]            
+			AND     R3, R2, #0x2000      
+			CMP     R3, #0x000         
+    ; Si sigue sin estar presionado, ir al contador
+			BEQ     CONTADOR 
+    ; Si sigue presionado, repetir el debounce
+			B       DEBOUNCE
+            
+CONTADOR  
+    ; Incrementar el contador
+			ADD     R12, R12,#0X001
+			CMP     R12, #0X003					; Verificar el valor del contador comparando
+			BEQ     ENCENDER_LED				; Si es igual salte a la funcion ENCENDER_LED
+			CMP     R12, #0X005					; Verificar el valor del contador
+			BEQ     APAGAR_LED					; Saltar a la funcion APAGAR_LED
+			B       LOOP						; Si el contador no llega a los valores especificados, volver al bucle principal
+
+ENCENDER_LED
+			MOV     R0, #0X4000     			; Encender el LED en PB14
+			STR     R0, [R10]           
+			B       LOOP						; Volver al bucle principal
+
+APAGAR_LED
+			MOV     R0, #0X00000000     		; Apagar el LED en PB14
+			STR     R0, [R10]           
+			MOV     R12, #0X0					; Reiniciar el contador
+			B       LOOP						; Volver al bucle principal
+; Función de retardo
+DELAY_MS
+DELAY_02
+			MOV     R4, #0x3E80      ; Inicializar el contador de retardo con el valor 0x3E80 (16000 en decimal)
+
+DELAY_01    
+			SUB     R4, #0x01        ; Decrementar el contador de retardo en 1
+			CMP     R4, #0x00        ; Comparar el contador con 0
+			BNE     DELAY_01         ; Si el contador no es igual a 0, repetir el bucle de retardo
+			SUB     R3, #0x01        ; Decrementar el contador de tiempo en 1
+			CMP     R3, #0x00        ; Comparar el contador de tiempo con 0
+			BNE     DELAY_02         ; Si el contador de tiempo no es igual a 0, volver al inicio del retardo
+			BX      LR               ; Salir de la función de retardo
+
+
+			ALIGN
+			END
