@@ -1,0 +1,63 @@
+;Lab_1 Juan Rodriguez/201920171; Miguel Garces/202013995
+;Secuencia encendido y apagado de Leds
+
+; Definición de registros y direcciones de memoria para los periféricos
+RCC_AHB4ENR		EQU		0X58024540   ; Habilitamos relojes para los puertos GIPIOB, GIPIOC Y GIPIOE
+GPIOB_MODER		EQU 	0X58020400   ; Registro de modo del GPIOB
+GPIOB_ODR 		EQU     0X58020414   ; Registro de datos de salida del GPIOB
+GPIOE_MODER		EQU 	0X58021000   ; Registro de modo del GPIOE
+GPIOE_ODR 		EQU     0X58021014   ; Registro de datos de salida del GPIOE
+
+; Desarrollo del código
+		AREA |.Text|, CODE, READONLY, ALIGN = 2   
+		ENTRY                                      
+		EXPORT __main                              
+		
+__main  
+				LDR		R0, = RCC_AHB4ENR            	   ; Cargar dirección de RCC_AHB4ENR en R0
+				LDR 	R1, [R0]                           ; Leer el contenido de RCC_AHB4ENR en R1
+			
+				ORR		R1, #0X0012                        ; Habilitar los relojes para GPIOB y GPIOE
+				STR     R1, [R0]                           ; Almacenar el nuevo valor en RCC_AHB4ENR
+		
+				LDR     R0, = GPIOB_MODER                  ; Cargar dirección de GPIOB_MODER en R0
+				MOVW 	R1, #0x0001                        ; Configurar PB0 como salida
+				MOVT 	R1, #0x1000		                   ; Configurar PB0 como salida
+				STR		R1, [R0]                           ; Guardar el valor en la posicion de registro R1 de la memoria RAM
+		
+				LDR     R0, = GPIOE_MODER                  ; Cargar dirección de GPIOE_MODER en R0
+				MOVW 	R1, #0x00000004                    ; asigna como salida salida
+				STR		R1, [R0]                           ; Almacenar el nuevo valor en GPIOE_MODER
+		
+				LDR     R10, = GPIOB_ODR                   ; Carga la dirección de GPIOB_ODR en R10
+				LDR     R11, = GPIOE_ODR                   ; Carga la dirección de GPIOE_ODR en R11
+
+LOOP											 		   ; Etiqueta para marcar el ciclo
+				MOV		R0,	#0X00000001                    ; Encender el LED en PB0
+				STR		R0,	[R10]   
+				MOV		R3,	#500                           ; Se establece el tiempo de espera
+				BL		DELAY_MS                           ; Salta a la función de retardo
+		
+				MOV		R0,	#0x0000003                     ; Encender los LEDs PE1 y PB0
+				STR		R0,	[R10]   
+				STR		R0,	[R11]
+				MOV		R3,	#500                           ; Establecer el tiempo de espera
+				BL		DELAY_MS                           ; Saltar a la función de retardo
+		
+				B       LOOP                               ; Salta para volver al inicio del bucle
+
+; Función de retardo
+DELAY_MS
+DELAY_02		
+				MOV 	R4,	#0X3E80                        ; Se establece el contador de retardo
+
+DELAY_01		SUB		R4,	#0X01                          ; Decrementar el contador
+				CMP		R4, #0X00                          ; Comparar con cero
+				BNE		DELAY_01                           ; Si no es cero, repetir el bucle
+				SUB		R3,	#0X01                          ; Decrementar el contador de tiempo
+				CMP		R3, #0X00                          ; Comparar con cero
+				BNE		DELAY_02                           ; Si no es cero, repetir el bucle
+				BX		LR                                 ; Salir de la función
+
+				ALIGN                                      
+				END                                        ; Fin del código
