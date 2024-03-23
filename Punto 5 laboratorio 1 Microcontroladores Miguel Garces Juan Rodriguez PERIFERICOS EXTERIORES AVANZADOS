@@ -1,0 +1,203 @@
+;Lab_1 Juan Rodriguez/201920171; Miguel Garces/202013995
+;PERIFERICOS EXTERIORES AVANZADOS
+
+; Definición de las direcciones de memoria para los registros relevantes
+RCC_AHB4ENR		EQU		0X58024540   ; Dirección del registro RCC_AHB4ENR
+GPIOB_MODER		EQU 	0X58020400   ; Dirección del registro GPIOB_MODER
+GPIOB_ODR 		EQU     0X58020414   ; Dirección del registro GPIOB_ODR
+GPIOC_MODER		EQU 	0X58020800   ; Dirección del registro GPIOC_MODER
+GPIOC_ODR 		EQU     0X58020814   ; Dirección del registro GPIOC_ODR
+GPIOD_MODER		EQU 	0X58020C00   ; Dirección del registro GPIOD_MODER
+GPIOD_IDR 		EQU     0X58020C10   ; Dirección del registro GPIOD_IDR
+	
+            AREA |.Text|, CODE, READONLY, ALIGN = 2  ; Sección de código de solo lectura
+
+			ENTRY            ; Punto de entrada al programa
+			EXPORT __main   ; Exporta la etiqueta __main
+
+__main  	LDR		R0, = RCC_AHB4ENR   ; Carga la dirección del registro RCC_AHB4ENR en R0
+			LDR 	R1, [R0]            ; Lee el contenido del registro RCC_AHB4ENR y almacenarlo en R1
+			ORR		R1, #0X000E         ; Establece los bits necesarios para activar los puertos
+			STR     R1, [R0]            ; Guardar en RAM
+
+            ; Configuración del pin PB0 como salida
+			LDR     R0, = GPIOB_MODER   ; Carga la dirección del registro GPIOB_MODER en R0
+			MOV 	R1, #0x0001		  ; Configura el pin PB0 como salida
+			STR		R1, [R0]           ; Guarda el valor en el registro GPIOB_MODER
+
+            ; Configuración de los pines PC8, PC9, PC10 y PC11 como salidas para activar las filas
+			LDR     R0, = GPIOC_MODER   ; Carga la dirección del registro GPIOC_MODER en R0
+			MOV 	R1, #0x550000      ; Configura los pines PC8, PC9, PC10 y PC11 como salidas
+			STR		R1, [R0]           ; Guarda el valor en el registro GPIOC_MODER
+
+            ; Configuración de los pines PD4, PD5, PD6 y PD7 como entradas
+			LDR     R0, = GPIOD_MODER   ; Carga la dirección del registro GPIOD_MODER en R0
+			MOV		R1, #0000000       ; Configura los pines PD4, PD5, PD6 y PD7 como entradas
+			STR		R1, [R0]           ; Guarda el valor en el registro GPIOD_MODER
+
+            ; Asignación de registros a los puertos GPIOB y GPIOC
+			LDR     R9,  = GPIOB_ODR    ; Asigna el registro R9 al puerto GPIOB
+			LDR     R10, = GPIOC_ODR    ; Asigna el registro R10 al puerto GPIOC
+
+			MOV     R5,#0X20000000     ; Inicializa R5 con un valor para su uso posterior
+			MOV     R6,#0X00            ; Inicializa R6 con un valor para su uso posterior
+
+LOOP		;Etiqueta para el ciclo
+			STR     R4,[R5,R6]
+			CMP     R6, #0X32
+			BEQ		VERIFY
+			ADD		R6,R6,#8
+			LDR     R1, =GPIOD_IDR    
+			LDR     R2, [R1]  			
+			MOV     R0, #0X100 ;ENCIENDE FILA 1      
+			STR     R0, [R10]
+			AND     R3, R2, #0x80     
+			CMP     R3, #0x80            
+			BEQ     NUM_1 		;PRUEBA COLUMNA 1 FILA 1
+			AND     R3, R2, #0x40     
+			CMP     R3, #0x40            
+			BEQ     NUM_2		;PRUEBA COLUMNA 2 FILA 1
+			AND     R3, R2, #0x20      
+			CMP     R3, #0x80            
+			BEQ     NUM_3 		;PRUEBA COLUMNA 3 FILA 1
+			AND     R3, R2, #0x10      
+			CMP     R3, #0x10            
+			BEQ     _A			;PRUEBA COLUMNA 4 FILA 1
+			MOV     R0, #0X200 ;ENCIENDE FILA 2      
+			STR     R0, [R10]
+			AND     R3, R2, #0x80     
+			CMP     R3, #0x80            
+			BEQ     NUM_4 		;PRUEBA COLUMNA 1 FILA 2
+			AND     R3, R2, #0x40     
+			CMP     R3, #0x40            
+			BEQ     NUM_5		;PRUEBA COLUMNA 2 FILA 2
+			AND     R3, R2, #0x20      
+			CMP     R3, #0x80            
+			BEQ     NUM_6 		;PRUEBA COLUMNA 3 FILA 2
+			AND     R3, R2, #0x10      
+			CMP     R3, #0x10            
+			BEQ     _B			;PRUEBA COLUMNA 4 FILA 2
+			MOV     R0, #0X400 ;ENCIENDE FILA 3      
+			STR     R0, [R10]
+			AND     R3, R2, #0x80     
+			CMP     R3, #0x80            
+			BEQ     NUM_7 		;PRUEBA COLUMNA 1 FILA 3
+			AND     R3, R2, #0x40     
+			CMP     R3, #0x40            
+			BEQ     NUM_8		;PRUEBA COLUMNA 2 FILA 3
+			AND     R3, R2, #0x20      
+			CMP     R3, #0x80            
+			BEQ     NUM_9 		;PRUEBA COLUMNA 3 FILA 3
+			AND     R3, R2, #0x10      
+			CMP     R3, #0x10            
+			BEQ     _C			;PRUEBA COLUMNA 4 FILA 3
+			MOV     R0, #0X800 ;ENCIENDE FILA 4     
+			STR     R0, [R10]
+			AND     R3, R2, #0x80     
+			CMP     R3, #0x80            
+			BEQ     ASTERISC 	;PRUEBA COLUMNA 1 FILA 4
+			AND     R3, R2, #0x40     
+			CMP     R3, #0x40            
+			BEQ     NUM_0		;PRUEBA COLUMNA 2 FILA 4
+			AND     R3, R2, #0x20      
+			CMP     R3, #0x80            
+			BEQ     NUMERAL 	;PRUEBA COLUMNA 3 FILA 4
+			AND     R3, R2, #0x10      
+			CMP     R3, #0x10            
+			BEQ     _D			;PRUEBA COLUMNA 4 FILA 4
+			B       LOOP
+VERIFY 		;Etiqueta para verificar el que elo pin sea correcto
+			LDR		R14, [R5,R6]      ; Carga el valor del PIN 1
+			CMP     R14, #4           ; Compara con el valor esperado para el PIN 1
+			BNE     ERROR             ; Salta a ERROR si no coincide
+			SUB     R6,R6,#8          ; Mueve al siguiente dígito del código PIN
+			LDR		R13, [R5,R6]      ; Carga el valor del PIN 2
+			CMP     R13, #3           ; Compara con el valor esperado para el PIN 2
+			BNE     ERROR             ; Salta a ERROR si no coincide
+			SUB     R6,R6,#8          ; Mueve al siguiente dígito del código PIN
+			LDR		R12, [R5,R6]      ; Carga el valor del PIN 3
+			CMP     R12, #2           ; Compara con el valor esperado para el PIN 3
+			BNE     ERROR             ; Salta a ERROR si no coincide
+			SUB     R6,R6,#8          ; Mueve al siguiente dígito del código PIN
+			LDR		R11, [R5,R6]      ; Carga el valor del PIN 4
+			CMP     R11, #1           ; Compara con el valor esperado para el PIN 4
+			BEQ  	LED                ; Si coincide, va a LED
+			B 		ERROR             ; Si no coincide, va a ERROR
+
+ERROR       ; Etiqueta de manejo de error
+			MOV		R4, #00           ; Establece R4 en 0 (indicador de error)
+			MOV     R6,#0X8           ; Restablece R6 para reiniciar el ingreso del PIN
+			B		LOOP              ; Salta de regreso al bucle principal
+
+LED         ; Etiqueta para encender el LED
+			MOV     R0, #0X001        ; Configura R0 para encender el LED
+			STR     R0, [R9]           ; Escribe en el registro correspondiente para encender el LED
+			B       LOOP              ; Regresa al bucle principal
+
+; Subrutinas para cada dígito del código PIN
+
+NUM_1		MOV		R4, #1            ; Configura R4 para el dígito 1
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_2		MOV		R4, #2            ; Configura R4 para el dígito 2
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_3		MOV		R4, #3            ; Configura R4 para el dígito 3
+			B		LOOP              ; Regresa al bucle principal
+
+_A			MOV		R4, #11           ; Configura R4 para el dígito A
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_4		MOV		R4, #4            ; Configura R4 para el dígito 4
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_5		MOV		R4, #5            ; Configura R4 para el dígito 5
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_6		MOV		R4, #6            ; Configura R4 para el dígito 6
+			B		LOOP              ; Regresa al bucle principal
+
+_B			MOV		R4, #12           ; Configura R4 para el dígito B
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_7		MOV		R4, #1            ; Configura R4 para el dígito 7
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_8		MOV		R4, #2            ; Configura R4 para el dígito 8
+			B		LOOP              ; Regresa al bucle principal
+
+NUM_9		MOV		R4, #3            ; Configura R4 para el dígito 9
+			B		LOOP              ; Regresa al bucle principal
+
+_C			MOV		R4, #13           ; Configura R4 para el dígito C
+			B		LOOP              ; Regresa al bucle principal
+		
+ASTERISC    ; Asignar el valor 15 a R4 (indicador de asterisco)
+			MOV		R4, #15           ; R4 = 15 (indicador de asterisco)
+			B		LOOP              ; Saltar al bucle principal
+
+NUM_0       ; Asignar el valor 0 a R4 (indicador de número 0)
+			MOV		R4, #0            ; R4 = 0 (indicador de número 0)
+			B		LOOP              ; Saltar al bucle principal
+
+NUMERAL     ; Asignar el valor 15 a R4 (indicador de numeral)
+			MOV		R4, #15           ; R4 = 15 (indicador de numeral)
+			B		LOOP              ; Saltar al bucle principal
+
+_D          ; Asignar el valor 16 a R4 (indicador de letra D)
+			MOV		R4, #16           ; R4 = 16 (indicador de letra D)
+			B		LOOP              ; Saltar al bucle principal
+
+DELAY_MS    ; Función de retardo en milisegundos
+DELAY_02    MOV R4, #0x3E80        ; Carga el valor para el retardo en milisegundos
+
+DELAY_01    SUB R4, #0x01          ; Decrementa el contador de retardo
+            CMP R4, #0x00          ; Compara si el contador ha alcanzado cero
+			BNE DELAY_01           ; Si no ha alcanzado cero, repetir el bucle de retardo
+			SUB R3, #0x01          ; Decrementar el contador de repeticiones de retardo
+			CMP R3, #0x00          ; Comparar si todas las repeticiones se han completado
+			BNE DELAY_02           ; Si no se han completado todas las repeticiones, repetir el retardo
+			BX  LR                 ; Retornar desde la función de retardo
+			
+			ALIGN
+			END
