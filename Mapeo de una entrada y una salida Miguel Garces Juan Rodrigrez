@@ -1,0 +1,53 @@
+;Lab_1 Juan Rodriguez/201920171; Miguel Garces/202013995
+;Mapeo de una entrada y una salida
+
+; Definición de registros y direcciones de memoria para los periféricos
+RCC_AHB4ENR		EQU		0X58024540 		;Habilitamos relojes para los puertos GIPIOB y GIPIOC 
+GPIOB_MODER		EQU 	0X58020400		; Registro de modo del GPIOB
+GPIOB_ODR 		EQU     0X58020414		; Registro de datos de salida del GPIOB
+GPIOC_MODER		EQU 	0X58020800		; Registro de modo del GPIOC
+GPIOC_IDR 		EQU     0X58020810		; Registro de datos de salida del GPIOC
+
+	
+	
+            AREA |.Text|, CODE, READONLY, ALIGN = 2
+			ENTRY
+			EXPORT __main
+					
+__main  	LDR		R0, = RCC_AHB4ENR	 ; Cargar dirección de RCC_AHB4ENR en R0
+			LDR 	R1, [R0]             ; Leer el contenido de RCC_AHB4ENR en R1
+			
+			ORR		R1, #0X0006   		; Habilitar los relojes para GPIOB y GPIOC
+			STR     R1, [R0]
+			
+			LDR     R0, = GPIOB_MODER   ; Se configura PB14 como salida
+			MOVW 	R1, #0x0000
+			MOVT 	R1, #0x1000
+			STR		R1, [R0]
+			
+			LDR     R0, = GPIOC_MODER   ; Se configura PC13 como entrada
+			MOVW 	R1, #0x00000000   	; Modo de entrada
+			STR		R1, [R0]
+			
+			LDR     R10, = GPIOB_ODR   	; Lee u obtiene la dirección base del registro ODR de GPIOB
+
+LOOP
+		
+			LDR     R1, =GPIOC_IDR    	; Obtiene la dirección base del registro IDR de GPIOC
+			LDR     R2, [R1]          	; Leer el estado de PC13
+        
+			AND     R3, R2, #0x2000   	; Realiza la operación AND con el estado de PC13 y el valor esperado 
+			CMP     R3, #0            	; Compara el resultado con 0
+			BEQ     NOT_PRESSED       	; Salta si el pulsador no está presionado
+        
+			MOV     R0, #0X4000   		; Encender el LED en PB14
+			STR     R0, [R10]
+			B       LOOP
+
+NOT_PRESSED
+			MOV     R0, #0X00000000   	; Apagar el LED en PB14
+			STR     R0, [R10]
+			B       LOOP
+
+			ALIGN
+			END
